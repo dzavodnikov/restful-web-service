@@ -1,2 +1,2 @@
-# restful-web0service
-RESTful Web Service on Python
+# Descritption
+This is simple example of RESTful Web Service on Python.
