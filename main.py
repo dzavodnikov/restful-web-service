@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.openapi.utils import get_openapi
 from pydantic import BaseModel
 
 from datetime import date
@@ -93,3 +94,21 @@ async def book_update(book_id: int, update: BookUpdate) -> Book:
     book_storage.persist(persist_book)
 
     return persist_book
+
+
+def custom_openapi():
+    if app.openapi_schema:  # If was cached...
+        return app.openapi_schema  # ...return cache.
+
+    # Create schema at first time...
+    openapi_schema = get_openapi(
+        title="RESTful Web Service",
+        version="1.0.0",
+        description="This is a very simple RESTful Web Service",
+        routes=app.routes
+    )
+    app.openapi_schema = openapi_schema  # ...and cache it.
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
