@@ -1,8 +1,0 @@
-# Ignore all .-files and .-folders.
-.*
-
-# Save gitignore.
-!/.gitignore
-
-# Save IDEA configuration.
-!/.idea
