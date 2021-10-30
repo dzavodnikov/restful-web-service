@@ -1,14 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
 
 from typing import List
 
-from domain import Book, BookUpdate
+from domain import Book, BookUpdate, BookNotFoundException
 from memory_storage import MemoryBookStorage
 
 
 app = FastAPI()
 book_storage = MemoryBookStorage()
+
+
+@app.exception_handler(BookNotFoundException)
+async def book_not_found_exception(_request: Request, exc: BookNotFoundException):
+    return JSONResponse(status_code=404, content={"message": f"Book with ID {exc.book_id} not found"})
 
 
 @app.get("/book/list")

@@ -1,8 +1,6 @@
 from typing import List
 
-from fastapi import HTTPException
-
-from domain import Book, BookUpdate
+from domain import Book, BookUpdate, BookNotFoundException
 
 
 class MemoryBookStorage:
@@ -19,10 +17,9 @@ class MemoryBookStorage:
     def find(self, book_id: int) -> Book:
         """Find book from the storage. Can be used for modification or delete requests."""
         for book in self.books:
-            print(f"Search ID {book_id} and compare with {book.id}: {book_id == book.id}")
             if book.id == book_id:
                 return book
-        raise HTTPException(status_code=404, detail=f"Book with ID {book_id} not found")
+        raise BookNotFoundException(book_id)
 
     def create(self, book: BookUpdate) -> Book:
         """Create book in a storage. Populate unique identifier for future requests."""
