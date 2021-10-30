@@ -1,6 +1,7 @@
 from typing import Dict
 
 from fastapi.testclient import TestClient
+from requests import Response
 
 from main import app
 
@@ -76,6 +77,27 @@ def test_book_update():
     assert persist_book["title"] == update["title"]
 
 
+def get_none_existing_book_id():
+    return max([book["id"] for book in book_list()]) + 1
+
+
+def check_not_found_response(response: Response, book_id: int):
+    assert response.status_code == 404
+
+    assert response.json()["message"] == f"Book with ID {book_id} not found"
+
+
+def test_book_update_not_found():
+    non_exists_book_id = get_none_existing_book_id()
+
+    update = {
+        "title": "Awesome Novel"
+    }
+    response = client.put(f"/book/{non_exists_book_id}", json=update)
+
+    check_not_found_response(response, non_exists_book_id)
+
+
 def test_book_delete():
     book = create_book()
     assert book in book_list()
@@ -85,3 +107,11 @@ def test_book_delete():
     assert response.status_code == 200
 
     assert not (book in book_list())
+
+
+def test_book_delete_not_found():
+    non_exists_book_id = get_none_existing_book_id()
+
+    response = client.delete(f"/book/{non_exists_book_id}")
+
+    check_not_found_response(response, non_exists_book_id)
