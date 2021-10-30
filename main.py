@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from datetime import date
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 
 class BookUpdate(BaseModel):
@@ -29,7 +29,7 @@ class MemoryBookStorage:
         self.books = []
 
     def list(self) -> List[Book]:
-        return self.books
+        return sorted(self.books, key=lambda book: book.id)
 
     def find(self, book_id: int) -> Book:
         for book in self.books:
@@ -61,13 +61,13 @@ async def book_list() -> List[Book]:
 
 
 @app.post("/book")
-async def book_add(book: BookUpdate) -> None:
+async def book_add(book: BookUpdate) -> Book:
     persist_book = book_storage.create(book)
     return persist_book
 
 
 @app.delete("/book/{book_id}")
-async def book_delete(book_id: int) -> None:
+async def book_delete(book_id: int) -> Book:
     persist_book = book_storage.find(book_id)
     book_storage.remove(persist_book)
     return persist_book
