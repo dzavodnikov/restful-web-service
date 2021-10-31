@@ -32,6 +32,6 @@ class MemoryBookStorage:
         """Remove book from the storage."""
         self.books.remove(book)
 
-    def persist(self, _book: BookUpdate) -> None:
+    def persist(self, _book: Book) -> None:
         """Update book in a storage."""
         pass

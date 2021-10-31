@@ -17,10 +17,6 @@ def book_list():
     return response.json()
 
 
-def test_book_list_empty():
-    assert book_list() == []
-
-
 def test_book_add():
     book = {
         "author": "John Doe",
@@ -78,7 +74,10 @@ def test_book_update():
 
 
 def get_none_existing_book_id():
-    return max([book["id"] for book in book_list()]) + 1
+    existing_books = book_list()
+    if len(existing_books) == 0:
+        return 1
+    return max([book["id"] for book in existing_books]) + 1
 
 
 def check_not_found_response(response: Response, book_id: int):
@@ -98,7 +97,7 @@ def test_book_update_not_found():
     check_not_found_response(response, non_exists_book_id)
 
 
-def test_book_delete():
+def test_book_delete_one():
     book = create_book()
     assert book in book_list()
 
@@ -107,6 +106,15 @@ def test_book_delete():
     assert response.status_code == 200
 
     assert not (book in book_list())
+
+
+def test_book_delete_all():
+    for book in book_list():
+        response = client.delete(f"/book/{book['id']}")
+
+        assert response.status_code == 200
+
+    assert book_list() == []
 
 
 def test_book_delete_not_found():

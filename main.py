@@ -5,11 +5,12 @@ from fastapi.responses import JSONResponse
 from typing import List
 
 from domain import Book, BookUpdate, BookNotFoundException
-from memory_storage import MemoryBookStorage
-
+from sqlite_storage import SQLiteBookStorage
 
 app = FastAPI()
-book_storage = MemoryBookStorage()
+
+
+book_storage = SQLiteBookStorage()
 
 
 @app.exception_handler(BookNotFoundException)
