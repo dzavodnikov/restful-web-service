@@ -55,17 +55,17 @@ class SQLiteBookStorage:
         return f'strftime("{time_format}", {key}) {comparator} strftime("{time_format}", "{value}")'
 
     def list(self,
-             author: Optional[str],
-             title: Optional[str],
-             published_date_from: Optional[str],
-             published_date_to: Optional[str]) -> List[Book]:
+             author: Optional[str] = None,
+             title: Optional[str] = None,
+             published_date_from: Optional[str] = None,
+             published_date_to: Optional[str] = None) -> List[Book]:
         """Provide list of saved books."""
 
         filter_conditions = [SQLiteBookStorage.string_compare_expr("author", author),
                              SQLiteBookStorage.string_compare_expr("title", title),
                              SQLiteBookStorage.date_compare_expr("published_date", ">", published_date_from),
                              SQLiteBookStorage.date_compare_expr("published_date", "<", published_date_to)]
-        condition = " AND ".join([v for v in filter_conditions if v is not None])
+        condition = " AND ".join([v for v in filter_conditions if v])
         where = "" if condition is "" else f"WHERE {condition}"
 
         with sqlite3.connect(self.storage_name) as connection:
@@ -121,7 +121,7 @@ class SQLiteBookStorage:
 
             update_items = []
             for item in book.dict().items():
-                if item[0] != 'id' and item[1] is not None:
+                if item[0] != 'id' and item[1]:
                     update_items.append(item)
             string_items = [f'"{item[0]}" = "{item[1]}"' for item in update_items]
             update_str = ", ".join(string_items)

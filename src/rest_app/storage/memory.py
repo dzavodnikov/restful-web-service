@@ -1,6 +1,9 @@
+from rest_app.domain import Book, BookUpdate, BookNotFoundException
+
 from typing import List, Optional
 
-from rest_app.domain import Book, BookUpdate, BookNotFoundException
+import datetime
+import re
 
 
 class MemoryBookStorage:
@@ -10,14 +13,54 @@ class MemoryBookStorage:
         self.id_counter = 0
         self.books = []
 
+    @staticmethod
+    def string_compare_expr(key, value):
+        if value is None:
+            return None
+
+        reg_exp = re.compile(value.replace("?", ".?").replace("*", ".*"))
+        return lambda record: reg_exp.match(getattr(record, key))
+
+    @staticmethod
+    def parse_date(date_str: str) -> datetime.date:
+        return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+
+    @staticmethod
+    def date_compare_expr(key, comparator, value):
+        if value is None:
+            return None
+
+        value_date = MemoryBookStorage.parse_date(value)
+        if comparator == ">":
+            return lambda record: getattr(record, key) > value_date
+        else:
+            return lambda record: getattr(record, key) < value_date
+
     def list(self,
-             author: Optional[str],
-             title: Optional[str],
-             published_date_from: Optional[str],
-             published_date_to: Optional[str]) -> List[Book]:
+             author: Optional[str] = None,
+             title: Optional[str] = None,
+             published_date_from: Optional[str] = None,
+             published_date_to: Optional[str] = None) -> List[Book]:
         """Provide list of saved books."""
 
-        return sorted(self.books, key=lambda book: book.id)
+        filter_conditions = [MemoryBookStorage.string_compare_expr("author", author),
+                             MemoryBookStorage.string_compare_expr("title", title),
+                             MemoryBookStorage.date_compare_expr("published_date", ">", published_date_from),
+                             MemoryBookStorage.date_compare_expr("published_date", "<", published_date_to)]
+
+        result = []
+        for record in self.books:
+            add = True
+            for cond in filter_conditions:
+                if not cond:
+                    continue
+                if cond(record):
+                    continue
+                add = False
+                break
+            if add:
+                result.append(record)
+        return result
 
     def find(self, book_id: int) -> Book:
         """Find book from the storage. Can be used for modification or delete requests."""

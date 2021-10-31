@@ -1,17 +1,21 @@
-from rest_app import get_storage, get_app
+from rest_app import get_storage
 from rest_app.domain import Book, BookUpdate, BookNotFoundException
 
-from fastapi import Request
+from fastapi import FastAPI, Request
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
+from pydantic import BaseSettings
 from typing import List
 
 
-app = get_app()
+class Settings(BaseSettings):
+    storage_type: str = "sqlite:data/book_storage.db"
 
-book_storage = get_storage()
-# book_storage = get_storage("sqlite", "data/book_storage.db")
+
+setting = Settings()
+app = FastAPI()
+book_storage = get_storage(setting.storage_type)
 
 
 @app.exception_handler(BookNotFoundException)
@@ -29,7 +33,6 @@ async def book_list(
         title: str = None,
         published_date_from: str = None,
         published_date_to: str = None) -> List[Book]:
-
     return book_storage.list(author, title, published_date_from, published_date_to)
 
 
