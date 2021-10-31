@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Optional
 
 from domain import Book, BookUpdate, BookNotFoundException
 
@@ -35,12 +35,42 @@ class SQLiteBookStorage:
     def read_book(book_columns: List[str], book_record: List[Any]):
         return Book(**dict(zip(book_columns, book_record)))
 
-    def list(self) -> List[Book]:
+    @staticmethod
+    def string_compare_expr(key, value):
+        if value is None:
+            return None
+
+        if "?" in value or "*" in value:
+            value_expr = value.replace("?", "_").replace("*", "%")
+            return f'{key} LIKE "{value_expr}"'
+        else:
+            return f'{key} = "{value}"'
+
+    @staticmethod
+    def date_compare_expr(key, comparator, value):
+        if value is None:
+            return None
+
+        time_format = "%Y-%m-%d"
+        return f'strftime("{time_format}", {key}) {comparator} strftime("{time_format}", "{value}")'
+
+    def list(self,
+             author: Optional[str],
+             title: Optional[str],
+             published_date_from: Optional[str],
+             published_date_to: Optional[str]) -> List[Book]:
         """Provide list of saved books."""
+
+        filter_conditions = [SQLiteBookStorage.string_compare_expr("author", author),
+                             SQLiteBookStorage.string_compare_expr("title", title),
+                             SQLiteBookStorage.date_compare_expr("published_date", ">", published_date_from),
+                             SQLiteBookStorage.date_compare_expr("published_date", "<", published_date_to)]
+        condition = " AND ".join([v for v in filter_conditions if v is not None])
+        where = "" if condition is "" else f"WHERE {condition}"
 
         with sqlite3.connect(self.storage_name) as connection:
             cursor = connection.cursor()
-            cursor.execute("SELECT * from books;")
+            cursor.execute(f"SELECT * from books {where};")
             book_record_list = cursor.fetchall()
             book_columns = SQLiteBookStorage.get_book_columns(cursor)
             return [SQLiteBookStorage.read_book(book_columns, book_record) for book_record in book_record_list]

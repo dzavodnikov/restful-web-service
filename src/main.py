@@ -19,8 +19,13 @@ async def book_not_found_exception(_request: Request, exc: BookNotFoundException
 
 
 @app.get("/book/list")
-async def book_list() -> List[Book]:
-    return book_storage.list()
+async def book_list(
+        author: str = None,
+        title: str = None,
+        published_date_from: str = None,
+        published_date_to: str = None) -> List[Book]:
+
+    return book_storage.list(author, title, published_date_from, published_date_to)
 
 
 @app.post("/book")
