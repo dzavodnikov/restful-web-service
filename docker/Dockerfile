@@ -2,12 +2,10 @@
 FROM python:3.6.15-bullseye
 
 # Start container
-RUN mkdir -p /usr/share/rest
-WORKDIR /usr/share/rest
+COPY data               /usr/share/data
+COPY src/rest_app       /usr/share/rest_app
+COPY requirements.txt   /usr/share/rest_app
 
-COPY src/*.py ./
-
-COPY requirements.txt ./
-RUN python -m pip install -r requirements.txt
-
-ENTRYPOINT ["uvicorn", "main:app", "--app-dir", "/usr/share/rest", "--host", "0.0.0.0"]
+WORKDIR /usr/share
+RUN python -m pip install -r rest_app/requirements.txt
+ENTRYPOINT ["uvicorn", "rest_app.rest:app", "--app-dir", "/usr/share", "--host", "0.0.0.0"]

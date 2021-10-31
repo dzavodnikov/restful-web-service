@@ -3,9 +3,9 @@ version: "3"
 services:
     rest-container:
         build:
-          context: ../
-          dockerfile: docker/Dockerfile
+            context: ../
+            dockerfile: docker/Dockerfile
         ports:
          - 18000:8000
         volumes:
-          - ../data:/usr/share/rest/data
+         - ../data:/usr/share/data
