@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from domain import Book, BookUpdate, BookNotFoundException
+from rest_app.domain import Book, BookUpdate, BookNotFoundException
 
 
 class MemoryBookStorage:

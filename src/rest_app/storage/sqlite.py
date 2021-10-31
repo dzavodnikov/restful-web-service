@@ -1,6 +1,6 @@
 from typing import List, Any, Optional
 
-from domain import Book, BookUpdate, BookNotFoundException
+from rest_app.domain import Book, BookUpdate, BookNotFoundException
 
 import sqlite3
 
@@ -8,7 +8,7 @@ import sqlite3
 class SQLiteBookStorage:
     """Storage for books that save data in SQLite 3."""
 
-    def __init__(self, storage_name="data/book_storage.db"):
+    def __init__(self, storage_name: str):
         self.storage_name = storage_name
 
         # Create table if it was not exists.

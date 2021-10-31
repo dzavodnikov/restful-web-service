@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 from fastapi.testclient import TestClient
 from requests import Response
 
-from main import app
+from rest_app.rest import app
 
 
 client = TestClient(app)
