@@ -19,3 +19,5 @@ target/
 # Ignore Eclipse JDT (Java Development Tools) build.
 bin/
 
+# Ignore data.
+/data/*
