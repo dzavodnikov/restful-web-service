@@ -16,6 +16,11 @@ To see the result go to [http://localhost:8000](http://localhost:8000).
 
 SwaggerUI available at [http://localhost:8000/docs](http://localhost:8000/docs).
 
+ 3. Unit-tests
+```
+$ pytest --rootdir="." -v src/test.py
+```
+
 # How to use in Docker
 
 1) Build Docker image. In root directory run:

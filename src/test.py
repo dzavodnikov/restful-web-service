@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List, Optional
 
 from fastapi.testclient import TestClient
 from requests import Response
@@ -9,8 +9,20 @@ from main import app
 client = TestClient(app)
 
 
-def book_list():
-    response = client.get("/book/list")
+def book_list(args: Optional[Dict] = None):
+    path = "/book/list"
+    if args is not None:
+        import urllib.parse
+        path += "?" + urllib.parse.urlencode(args)
+    response = client.get(path)
+
+    assert response.status_code == 200
+
+    return response.json()
+
+
+def create_book(book_dict: Dict) -> Dict:
+    response = client.post("/book", json=book_dict)
 
     assert response.status_code == 200
 
@@ -23,44 +35,103 @@ def test_book_add():
         "title": "Awesome Novel",
         "published_date": "1980-02-15"
     }
-    response = client.post("/book", json=book)
 
-    assert response.status_code == 200
+    persist_book = create_book(book)
 
-    persist_book = response.json()
     for key in book:
         assert book[key] == persist_book[key]
-    assert int(response.json()["id"]) > 0
+    assert int(persist_book["id"]) > 0
 
 
-def create_book() -> Dict:
-    book = {
+def create_test_book() -> Dict:
+    return create_book({
         "author": "John Doe",
         "title": "Awesome Novel",
         "published_date": "1980-02-15"
-    }
-    response = client.post("/book", json=book)
-
-    assert response.status_code == 200
-
-    return response.json()
+    })
 
 
 def test_book_list_non_empty():
     existing_book_list = book_list()  # Previous tests can modify storage.
 
-    existing_book_list.append(create_book())
+    existing_book_list.append(create_test_book())
     assert book_list() == existing_book_list
 
-    existing_book_list.append(create_book())
+    existing_book_list.append(create_test_book())
     assert book_list() == existing_book_list  # New books have proper order.
 
-    existing_book_list.append(create_book())
+    existing_book_list.append(create_test_book())
     assert book_list() == existing_book_list
+
+
+def delete_all_books() -> None:
+    for book in book_list():
+        response = client.delete(f"/book/{book['id']}")
+
+        assert response.status_code == 200
+
+    assert book_list() == []
+
+
+def create_test_book_list() -> List[Dict]:
+    book_lst = [
+        {
+            "author": "John Doe",
+            "title": "Awesome Novel",
+            "published_date": "1980-02-15"
+        },
+        {
+            "author": "John Doe",
+            "title": "Tricky Story",
+            "published_date": "1981-04-20"
+        },
+        {
+            "author": "Jack Daniel",
+            "title": "Awesome Story",
+            "published_date": "1982-06-25"
+        }
+    ]
+    return [create_book(book) for book in book_lst]
+
+
+def test_book_list_filtering_author():
+    delete_all_books()
+    create_test_book_list()
+
+    assert len(book_list()) == 3
+
+    assert len(book_list({"author": "John Doe"})) == 2
+    assert len(book_list({"author": "Jack Daniel"})) == 1
+
+
+def test_book_list_filtering_title():
+    delete_all_books()
+    create_test_book_list()
+
+    assert len(book_list()) == 3
+
+    assert len(book_list({"title": "Awesome*"})) == 2
+    assert len(book_list({"title": "*Story"})) == 2
+    assert len(book_list({"title": "Tricky*"})) == 1
+
+
+def test_book_list_filtering_published_date():
+    delete_all_books()
+    create_test_book_list()
+
+    assert len(book_list()) == 3
+
+    assert len(book_list({"published_date_from": "1980-01-01"})) == 3
+    assert len(book_list({"published_date_to": "1983-01-01"})) == 3
+
+    assert len(book_list({"published_date_from": "1980-06-15"})) == 2
+    assert len(book_list({"published_date_to": "1982-06-15"})) == 2
+
+    assert len(book_list({"published_date_from": "1980-06-15", "published_date_to": "1982-06-15"})) == 1
 
 
 def test_book_update():
-    book = create_book()
+    book = create_test_book()
 
     update = {
         "title": "Awesome Novel #2"
@@ -98,7 +169,7 @@ def test_book_update_not_found():
 
 
 def test_book_delete_one():
-    book = create_book()
+    book = create_test_book()
     assert book in book_list()
 
     response = client.delete(f"/book/{book['id']}")
@@ -106,15 +177,6 @@ def test_book_delete_one():
     assert response.status_code == 200
 
     assert not (book in book_list())
-
-
-def test_book_delete_all():
-    for book in book_list():
-        response = client.delete(f"/book/{book['id']}")
-
-        assert response.status_code == 200
-
-    assert book_list() == []
 
 
 def test_book_delete_not_found():
