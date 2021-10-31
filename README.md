@@ -10,31 +10,31 @@ $ python -m pip install -r requirements.txt
 ```
  2. Run:
 ```
-$ uvicorn main:app --app-dir src --reload
+$ uvicorn main:app --app-dir src --host 0.0.0.0 --reload
 ```
-To see the result go to [http://127.0.0.1:8000](http://127.0.0.1:8000).
+To see the result go to [http://localhost:8000](http://localhost:8000).
 
-SwaggerUI available at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+SwaggerUI available at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 # How to use in Docker
 
 1) Build Docker image. In root directory run:
 
 ```
-$ docker-compose build
+$  docker-compose -f ./docker/docker-compose.yml build
 ```
 
 2) Run Docker containers with application:
 
 ```
-$ docker-compose up
+$  docker-compose -f ./docker/docker-compose.yml up
 ```
 
-3) Open `http://localhost:18000/`.
+3) Open [http://localhost:18000/docs](http://localhost:18000/docs).
 
 _Note:_
 To stop run:
 
 ```
-$ docker-compose down
+$ docker-compose -f ./docker/docker-compose.yml down
 ```
