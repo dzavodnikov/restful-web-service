@@ -4,6 +4,7 @@ from rest_app.domain import Book, BookUpdate, BookNotFoundException
 from fastapi import FastAPI, Request
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from pydantic import BaseSettings
 from typing import List
@@ -21,6 +22,13 @@ book_storage = get_storage(setting.storage_type)
 @app.exception_handler(BookNotFoundException)
 async def book_not_found_exception(_request: Request, exc: BookNotFoundException):
     return JSONResponse(status_code=404, content={"message": f"Book with ID {exc.book_id} not found"})
+
+
+app.mount("/css", StaticFiles(directory="resources/css"))
+app.mount("/js", StaticFiles(directory="resources/js"))
+app.mount("/img", StaticFiles(directory="resources/img"))
+# Should be last one to prevent catching other resources.
+app.mount("/", StaticFiles(directory="resources/html", html=True))
 
 
 @app.get(
