@@ -13,12 +13,12 @@
     <script src="/js/knockout.js" type="text/javascript"></script>
     <script src="/js/main.js" type="text/javascript"></script>
 
-    <title>Static Files - FastAPI</title>
+    <title>Book Storage</title>
 </head>
 <body>
     <div class="container-fluid" id="bookController">
         <div class="d-flex justify-content-center">
-            <h1>Book storage</h1>
+            <h1>Book Storage</h1>
         </div>
         &nbsp;
         <div class="d-flex">
@@ -40,7 +40,7 @@
                 </div>
             </div>
             <div class="p-2 ms-auto">
-                <button class="btn btn-primary" onclick="openCreateBookWindow();">Add book</button>
+                <button class="btn btn-primary" onclick="openAddBookWindow();">Add book</button>
             </div>
         </div>
         &nbsp;
@@ -169,7 +169,7 @@
         }
     }
 
-    function openCreateEditBookWindow(book, popupConfig) {
+    function openAddEditBookWindow(book, popupConfig) {
         mvcBookStorage.popupBook(book);
         mvcBookStorage.popupTitle(popupConfig.title);
         mvcBookStorage.popupActionName(popupConfig.actionName);
@@ -188,14 +188,14 @@
         $('#add-edit-popup').modal('show');
     }
 
-    function openCreateBookWindow() {
+    function openAddBookWindow() {
         const book = new Book({});
 
-        openCreateEditBookWindow(
+        openAddEditBookWindow(
             book,
             {
-                "title"     : "Create book",
-                "actionName": "Create",
+                "title"     : "Add book",
+                "actionName": "Add",
                 "actionType": "POST",
                 "actionURL" : "/book"
             }
@@ -205,7 +205,7 @@
     function openEditBookWindow(element) {
         const book = ko.dataFor(element);
 
-        openCreateEditBookWindow(
+        openAddEditBookWindow(
             book,
             {
                 "title"     : "Edit book",
@@ -299,6 +299,12 @@
 
         $(".filter .filter-input").each((_index, filterNode) => {
             filterNode = $(filterNode);
+
+            filterNode.on("keydown", (e) => {
+                if (e.originalEvent.code === "Enter") {
+                    loadBooks();
+                }
+            });
 
             filterNode.on("input", (_e) => {
                 if (filterNode.val() !== "") {
