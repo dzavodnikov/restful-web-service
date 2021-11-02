@@ -12,11 +12,11 @@ $ python -m pip install -r requirements.txt
 ```
 $ uvicorn rest_app.rest:app --app-dir src --host 0.0.0.0 --reload
 ```
-To see the result go to [http://localhost:8000](http://localhost:8000).
+To see Web UI go to [http://localhost:8000](http://localhost:8000).
 
-SwaggerUI available at [http://localhost:8000/docs](http://localhost:8000/docs).
+Swagger UI available at [http://localhost:8000/docs](http://localhost:8000/docs).
 
- 3. Unit-tests
+ 3. Unit-tests:
 ```
 $ pytest --rootdir=src -v src/tests/rest.py
 ```
@@ -35,7 +35,8 @@ $ docker-compose -f ./docker/docker-compose.yml build
 $ docker-compose -f ./docker/docker-compose.yml up
 ```
 
-3) Open [http://localhost:18000/docs](http://localhost:18000/docs).
+3) Open Web UI at [http://localhost:18000](http://localhost:18000) or 
+Swagger UI at [http://localhost:18000/docs](http://localhost:18000/docs).
 
 _Note:_
 To stop run:
