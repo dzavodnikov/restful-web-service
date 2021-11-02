@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from types import ModuleType
 
 
-storages = ["sqlite:data/book_storage.db", "memory"]
+storages = ["sqlite:data/book_storage.db.test", "memory"]
 
 
 def update_env_var(name: str, value: str) -> None:

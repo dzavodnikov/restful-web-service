@@ -20,4 +20,4 @@ target/
 bin/
 
 # Ignore data.
-/data/*
+/data/*.test
