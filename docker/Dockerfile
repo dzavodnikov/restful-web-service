@@ -1,8 +1,9 @@
 # Build container
-FROM python:3.6.15-bullseye
+FROM python:3.6.15-slim-bullseye
 
 # Start container
 COPY data               /usr/share/data
+COPY resources          /usr/share/resources
 COPY src/rest_app       /usr/share/rest_app
 COPY requirements.txt   /usr/share/rest_app
 

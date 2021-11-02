@@ -1,4 +1,7 @@
+from datetime import date
 from typing import List, Any, Optional
+
+from pydantic import ValidationError
 
 from rest_app.domain import Book, BookUpdate, BookNotFoundException
 
@@ -10,6 +13,13 @@ class SQLiteBookStorage:
 
     def __init__(self, storage_name: str):
         self.storage_name = storage_name
+
+        # Create database if it is not exists.
+        from pathlib import Path
+        path = Path(self.storage_name)
+        if not path.parent.exists():
+            path.parent.mkdir()  # Create dirs.
+            path.touch()  # Create file.
 
         # Create table if it was not exists.
         with sqlite3.connect(self.storage_name) as connection:
@@ -57,8 +67,8 @@ class SQLiteBookStorage:
     def list(self,
              author: Optional[str] = None,
              title: Optional[str] = None,
-             published_date_from: Optional[str] = None,
-             published_date_to: Optional[str] = None) -> List[Book]:
+             published_date_from: Optional[date] = None,
+             published_date_to: Optional[date] = None) -> List[Book]:
         """Provide list of saved books."""
 
         filter_conditions = [SQLiteBookStorage.string_compare_expr("author", author),
@@ -73,7 +83,14 @@ class SQLiteBookStorage:
             cursor.execute(f"SELECT * from books {where};")
             book_record_list = cursor.fetchall()
             book_columns = SQLiteBookStorage.get_book_columns(cursor)
-            return [SQLiteBookStorage.read_book(book_columns, book_record) for book_record in book_record_list]
+            result = []
+            for book_record in book_record_list:
+                try:
+                    book = SQLiteBookStorage.read_book(book_columns, book_record)
+                    result.append(book)
+                except ValidationError:
+                    self.remove(book_record[0])
+            return result
 
     def find(self, book_id: int) -> Book:
         """Find book from the storage. Can be used for modification or delete requests."""
@@ -97,19 +114,20 @@ class SQLiteBookStorage:
             columns = ', '.join(book_dict.keys())
             values = ', '.join([f'"{str(val)}"' for val in book_dict.values()])
             create_book = f"INSERT INTO books({columns}) VALUES ({values});"
+            print(create_book)
 
             cursor.execute(create_book)
             new_id = cursor.lastrowid
             connection.commit()
         return self.find(new_id)
 
-    def remove(self, book: Book) -> None:
+    def remove(self, book_id: str) -> None:
         """Remove book from the storage."""
 
         with sqlite3.connect(self.storage_name) as connection:
             cursor = connection.cursor()
 
-            cursor.execute(f"DELETE FROM books WHERE id = {book.id};")
+            cursor.execute(f"DELETE FROM books WHERE id = {book_id};")
 
             connection.commit()
 

@@ -2,7 +2,7 @@ from rest_app.domain import Book, BookUpdate, BookNotFoundException
 
 from typing import List, Optional
 
-import datetime
+from datetime import date
 import re
 
 
@@ -14,7 +14,7 @@ class MemoryBookStorage:
         self.books = []
 
     @staticmethod
-    def string_compare_expr(key, value):
+    def string_compare_expr(key: str, value: str):
         if value is None:
             return None
 
@@ -22,25 +22,20 @@ class MemoryBookStorage:
         return lambda record: reg_exp.match(getattr(record, key))
 
     @staticmethod
-    def parse_date(date_str: str) -> datetime.date:
-        return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
-
-    @staticmethod
-    def date_compare_expr(key, comparator, value):
+    def date_compare_expr(key: str, comparator: str, value: date):
         if value is None:
             return None
 
-        value_date = MemoryBookStorage.parse_date(value)
         if comparator == ">":
-            return lambda record: getattr(record, key) > value_date
+            return lambda record: getattr(record, key) > value
         else:
-            return lambda record: getattr(record, key) < value_date
+            return lambda record: getattr(record, key) < value
 
     def list(self,
              author: Optional[str] = None,
              title: Optional[str] = None,
-             published_date_from: Optional[str] = None,
-             published_date_to: Optional[str] = None) -> List[Book]:
+             published_date_from: Optional[date] = None,
+             published_date_to: Optional[date] = None) -> List[Book]:
         """Provide list of saved books."""
 
         filter_conditions = [MemoryBookStorage.string_compare_expr("author", author),
@@ -78,9 +73,10 @@ class MemoryBookStorage:
         self.books.append(book)
         return book
 
-    def remove(self, book: Book) -> None:
+    def remove(self, book_id: int) -> None:
         """Remove book from the storage."""
 
+        book = self.find(book_id)
         self.books.remove(book)
 
     def persist(self, _book: Book) -> None:

@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="/css/bootstrap.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet" >
+
+    <script src="/js/jquery.js" type="text/javascript"></script>
+    <script src="/js/bootstrap.bundle.js" type="text/javascript"></script>
+    <script src="/js/knockout.js" type="text/javascript"></script>
+    <script src="/js/main.js" type="text/javascript"></script>
+
+    <title>Book Storage</title>
+</head>
+<body>
+    <div class="container-fluid" id="bookController">
+        <div class="d-flex justify-content-center">
+            <h1>Book Storage</h1>
+        </div>
+        &nbsp;
+        <div class="d-flex">
+            <div class="p-2">
+                <div class="input-group filter">
+                    <button class="btn btn-primary filter-apply">Filter</button>
+                    <input type="text" class="form-control filter-input" id="author-filter"
+                           placeholder="Author" />
+                    <button class="btn btn-primary disabled clear-filter">&#9003;</button>
+                    <input type="text" class="form-control filter-input" id="title-filter"
+                           placeholder="Title" />
+                    <button class="btn btn-primary disabled clear-filter">&#9003;</button>
+                    <input type="text" class="form-control filter-input" id="published-date-from-filter"
+                           placeholder="Published Date From" />
+                    <button class="btn btn-primary disabled clear-filter">&#9003;</button>
+                    <input type="text" class="form-control filter-input" id="published-date-to-filter"
+                           placeholder="Published Date To" />
+                    <button class="btn btn-primary disabled clear-filter">&#9003;</button>
+                </div>
+            </div>
+            <div class="p-2 ms-auto">
+                <button class="btn btn-primary" onclick="openAddBookWindow();">Add book</button>
+            </div>
+        </div>
+        &nbsp;
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Author</th>
+                    <th>Title</th>
+                    <th>Published Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody data-bind="visible: bookList().length == 0">
+                <tr>
+                    <td colspan="5">
+                        No books exists.
+                    </td>
+                </tr>
+            </tbody>
+            <tbody data-bind="foreach: bookList">
+                <tr>
+                    <td data-bind="text: id"            >1</td>
+                    <td data-bind="text: author"        >John Doe</td>
+                    <td data-bind="text: title"         >Awesome Novel</td>
+                    <td data-bind="text: published_date">1980-02-15</td>
+                    <td class="controls">
+                        <span class="control" title="Edit"      onclick="openEditBookWindow(this);">&#9997;</span>
+                        &nbsp;
+                        <span class="control" title="Delete"    onclick="openDeleteBookWindow(this);">&#10006;</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="modal" tabindex="-1" id="error-popup">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Error</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger" role="alert">
+                            <pre></pre>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary"   data-bs-dismiss="modal"
+                                onclick="window.location.reload(false);">Page reload</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" tabindex="-1" id="delete-confirm-popup" data-bind="if: popupBook">
+            <div class="modal-dialog" data-bind="with: popupBook">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Do you really want to delete book?</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            <span data-bind="text: author"></span>, <span data-bind="text: title"></span>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary"   data-bs-dismiss="modal"
+                                onclick="deleteBook(this);">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" tabindex="-1" id="add-edit-popup" data-bind="if: popupBook">
+            <div class="modal-dialog" data-bind="with: popupBook">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" data-bind="text: $root.popupTitle"></h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="author" class="form-label">Author</label>
+                                <input type="text" class="form-control" id="author" data-bind="value: author" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="title" data-bind="value: title" />
+                            </div>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text" id="publishedDate">Publish Date</span>
+                                <input type="text" class="form-control" aria-describedby="publishedDate"
+                                       data-bind="value: published_date" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary"   data-bs-dismiss="modal"
+                                data-bind="text: $root.popupActionName, click: $root.popupActionFn"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+    let mvcBookStorage;
+
+    function errorProcessor(error) {
+        let message = error.statusText;
+        if (error.responseJSON) {
+            message = JSON.stringify(error.responseJSON, null, 4);
+        }
+
+        const popup = $('#error-popup');
+        popup.find('.alert pre').html(message);
+        popup.modal('show');
+    }
+
+    function koSave(key, value) {
+        if (value) {
+            return value;
+        }
+    }
+
+    function openAddEditBookWindow(book, popupConfig) {
+        mvcBookStorage.popupBook(book);
+        mvcBookStorage.popupTitle(popupConfig.title);
+        mvcBookStorage.popupActionName(popupConfig.actionName);
+        mvcBookStorage.popupActionFn = () => {
+            const bookJSON = ko.toJSON(book, koSave);
+            $.ajax({
+                "url"           : popupConfig.actionURL,
+                "type"          : popupConfig.actionType,
+                "data"          : bookJSON,
+                "contentType"   : "application/json",
+                "success"       : loadBooks,
+                "error"         : errorProcessor
+            });
+        };
+
+        $('#add-edit-popup').modal('show');
+    }
+
+    function openAddBookWindow() {
+        const book = new Book({});
+
+        openAddEditBookWindow(
+            book,
+            {
+                "title"     : "Add book",
+                "actionName": "Add",
+                "actionType": "POST",
+                "actionURL" : "/book"
+            }
+        );
+    }
+
+    function openEditBookWindow(element) {
+        const book = ko.dataFor(element);
+
+        openAddEditBookWindow(
+            book,
+            {
+                "title"     : "Edit book",
+                "actionName": "Update",
+                "actionType": "PUT",
+                "actionURL" : `/book/${book.id()}`
+            }
+        );
+    }
+
+    function openDeleteBookWindow(element) {
+        const book = ko.dataFor(element);
+
+        mvcBookStorage.popupBook(book);
+
+        $('#delete-confirm-popup').modal('show');
+    }
+
+    function deleteBook(element) {
+        const book = ko.dataFor(element);
+
+        $.ajax({
+            "url"       : `/book/${book.id()}`,
+            "type"      : "DELETE",
+            "success"   : loadBooks,
+            "error"     : errorProcessor
+        });
+    }
+
+    function Book(json) {
+        const self              = this;
+
+        self.id                 = ko.observable(json.id);
+        self.author             = ko.observable(json.author);
+        self.title              = ko.observable(json.title);
+        self.published_date     = ko.observable(json.published_date);
+    }
+
+    function BookStorageController() {
+        const self              = this;
+
+        self.bookList           = ko.observableArray();
+        self.popupBook          = ko.observable(null);
+        self.popupTitle         = ko.observable(null);
+        self.popupActionName    = ko.observable(null);
+        self.popupActionFn      = null;
+    }
+
+    function getFilterString() {
+        const parseParam = (paramName, fieldQuery) => {
+            const fieldValue = $(fieldQuery).val();
+            if (!!fieldValue && fieldValue !== "") {
+                return `${paramName}=${fieldValue}`;
+            } else {
+                return null;
+            }
+        };
+
+        const paramList = [];
+        paramList.push(parseParam("author",                 "#author-filter"                ));
+        paramList.push(parseParam("title",                  "#title-filter"                 ));
+        paramList.push(parseParam("published_date_from",    "#published-date-from-filter"   ));
+        paramList.push(parseParam("published_date_to",      "#published-date-to-filter"     ));
+        return paramList.filter((el) => !!el).join("&");
+    }
+
+    function loadBooks() {
+        let path = "/book/list";
+        const params = getFilterString();
+        if (params !== "") {
+            path += "?" + params;
+        }
+        $.ajax({
+            "url"       : path,
+            "type"      : "GET",
+            "success"   : (data) => {
+                const bookList = [];
+                for (let idx in data) {
+                    const newBook = new Book(data[idx]);
+                    bookList.push(newBook);
+                }
+                mvcBookStorage.bookList(bookList);
+            },
+            "error"     : errorProcessor
+        });
+    }
+
+    function filterInit() {
+        const filterButton = $(".filter .filter-apply");
+        filterButton.on("click", loadBooks);
+
+        $(".filter .filter-input").each((_index, filterNode) => {
+            filterNode = $(filterNode);
+
+            filterNode.on("keydown", (e) => {
+                if (e.originalEvent.code === "Enter") {
+                    loadBooks();
+                }
+            });
+
+            filterNode.on("input", (_e) => {
+                if (filterNode.val() !== "") {
+                    filterNode.next().removeClass("disabled");
+                } else {
+                    filterNode.next().addClass("disabled");
+                }
+            });
+        });
+
+        $(".filter .clear-filter").each((_index, clearNode) => {
+            clearNode = $(clearNode);
+
+            clearNode.on("click", (_e) => {
+                clearNode.prev().val("");
+                clearNode.addClass("disabled");
+                loadBooks();
+            });
+        });
+    }
+
+    window.addEventListener("load", function(event) {
+        mvcBookStorage = new BookStorageController();
+        loadBooks();
+        ko.applyBindings(mvcBookStorage, document.getElementById("bookController"));
+
+        filterInit();
+    });
+    </script>
+</body>
+</html>
