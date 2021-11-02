@@ -13,6 +13,13 @@ class SQLiteBookStorage:
     def __init__(self, storage_name: str):
         self.storage_name = storage_name
 
+        # Create database if it is not exists.
+        from pathlib import Path
+        path = Path(self.storage_name)
+        if not path.parent.exists():
+            path.parent.mkdir()  # Create dirs.
+            path.touch()  # Create file.
+
         # Create table if it was not exists.
         with sqlite3.connect(self.storage_name) as connection:
             cursor = connection.cursor()
