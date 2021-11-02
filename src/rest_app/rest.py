@@ -24,13 +24,6 @@ async def book_not_found_exception(_request: Request, exc: BookNotFoundException
     return JSONResponse(status_code=404, content={"message": f"Book with ID {exc.book_id} not found"})
 
 
-app.mount("/css", StaticFiles(directory="resources/css"))
-app.mount("/js", StaticFiles(directory="resources/js"))
-app.mount("/img", StaticFiles(directory="resources/img"))
-# Should be last one to prevent catching other resources.
-app.mount("/", StaticFiles(directory="resources/html", html=True))
-
-
 @app.get(
     "/book/list",
     description="""Return the list of books. You are also can filter by book records, like an 'author', 'title' and 
@@ -87,3 +80,11 @@ def custom_openapi():
 
 
 app.openapi = custom_openapi
+
+
+# To prevent overrode existing REST APIs.
+app.mount("/css", StaticFiles(directory="resources/css"))
+app.mount("/js", StaticFiles(directory="resources/js"))
+app.mount("/img", StaticFiles(directory="resources/img"))
+# Should be last one to prevent catching other resources.
+app.mount("/", StaticFiles(directory="resources/html", html=True))

@@ -16,6 +16,246 @@
     <title>Static Files - FastAPI</title>
 </head>
 <body>
-<h1>Test page</h1>
+    <div class="container-fluid" id="bookController">
+        <div class="d-flex justify-content-center">
+            <h1>Book storage</h1>
+        </div>
+        &nbsp;
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-primary" onclick="openCreateBookWindow();">Add book</button>
+        </div>
+        &nbsp;
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Author</th>
+                    <th>Title</th>
+                    <th>Publish Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody data-bind="visible: bookList().length == 0">
+                <tr>
+                    <td colspan="5">
+                        No books exists.
+                    </td>
+                </tr>
+            </tbody>
+            <tbody data-bind="foreach: bookList">
+                <tr>
+                    <td data-bind="text: id"            >1</td>
+                    <td data-bind="text: author"        >John Doe</td>
+                    <td data-bind="text: title"         >Awesome Novel</td>
+                    <td data-bind="text: published_date">1980-02-15</td>
+                    <td class="controls">
+                        <span class="control" title="Edit"      onclick="openEditBookWindow(this);">&#9997;</span>
+                        &nbsp;
+                        <span class="control" title="Delete"    onclick="openDeleteBookWindow(this);">&#10006;</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="modal" tabindex="-1" id="error-popup">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Error</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger" role="alert">
+                            <pre></pre>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary"   data-bs-dismiss="modal"
+                                onclick="window.location.reload(false);">Page reload</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" tabindex="-1" id="delete-confirm-popup" data-bind="if: popupBook">
+            <div class="modal-dialog" data-bind="with: popupBook">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Do you really want to delete book?</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            <span data-bind="text: author"></span>, <span data-bind="text: title"></span>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary"   data-bs-dismiss="modal"
+                                onclick="deleteBook(this);">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" tabindex="-1" id="add-edit-popup" data-bind="if: popupBook">
+            <div class="modal-dialog" data-bind="with: popupBook">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" data-bind="text: $root.popupTitle"></h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="col">
+                            <div class="mb-3">
+                                <label for="author" class="form-label">Author</label>
+                                <input type="text" class="form-control" id="author" data-bind="value: author">
+                            </div>
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="title" data-bind="value: title">
+                            </div>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text" id="publishedDate">Publish Date</span>
+                                <input type="text" class="form-control" aria-describedby="publishedDate"
+                                       data-bind="value: published_date">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary"   data-bs-dismiss="modal"
+                                data-bind="text: $root.popupActionName, click: $root.popupActionFn"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+    let mvcBookStorage;
+
+    function errorProcessor(error) {
+        let message = error.statusText;
+        if (error.responseJSON) {
+            message = JSON.stringify(error.responseJSON, null, 4);
+        }
+
+        const popup = $('#error-popup');
+        popup.find('.alert pre').html(message);
+        popup.modal('show');
+    }
+
+    function koSave(key, value) {
+        if (value) {
+            return value;
+        }
+    }
+
+    function openCreateEditBookWindow(book, popupConfig) {
+        mvcBookStorage.popupBook(book);
+        mvcBookStorage.popupTitle(popupConfig.title);
+        mvcBookStorage.popupActionName(popupConfig.actionName);
+        mvcBookStorage.popupActionFn = () => {
+            const bookJSON = ko.toJSON(book, koSave);
+            $.ajax({
+                "url"           : popupConfig.actionURL,
+                "type"          : popupConfig.actionType,
+                "data"          : bookJSON,
+                "contentType"   : "application/json",
+                "success"       : loadBooks,
+                "error"         : errorProcessor
+            });
+        };
+
+        $('#add-edit-popup').modal('show');
+    }
+
+    function openCreateBookWindow() {
+        const book = new Book({});
+
+        openCreateEditBookWindow(
+            book,
+            {
+                "title"     : "Create book",
+                "actionName": "Create",
+                "actionType": "POST",
+                "actionURL" : "/book"
+            }
+        );
+    }
+
+    function openEditBookWindow(element) {
+        const book = ko.dataFor(element);
+
+        openCreateEditBookWindow(
+            book,
+            {
+                "title"     : "Edit book",
+                "actionName": "Update",
+                "actionType": "PUT",
+                "actionURL" : `/book/${book.id()}`
+            }
+        );
+    }
+
+    function openDeleteBookWindow(element) {
+        const book = ko.dataFor(element);
+
+        mvcBookStorage.popupBook(book);
+
+        $('#delete-confirm-popup').modal('show');
+    }
+
+    function deleteBook(element) {
+        const book = ko.dataFor(element);
+
+        $.ajax({
+            "url"       : `/book/${book.id()}`,
+            "type"      : "DELETE",
+            "success"   : loadBooks,
+            "error"     : errorProcessor
+        });
+    }
+
+    function Book(json) {
+        const self              = this;
+
+        self.id                 = ko.observable(json.id);
+        self.author             = ko.observable(json.author);
+        self.title              = ko.observable(json.title);
+        self.published_date     = ko.observable(json.published_date);
+    }
+
+    function BookStorageController() {
+        const self              = this;
+
+        self.bookList           = ko.observableArray();
+        self.popupBook          = ko.observable(null);
+        self.popupTitle         = ko.observable(null);
+        self.popupActionName    = ko.observable(null);
+        self.popupActionFn      = null;
+    }
+
+    function loadBooks() {
+        $.ajax({
+            "url"       : "/book/list",
+            "type"      : "GET",
+            "success"   : (data) => {
+                const bookList = [];
+                for (let idx in data) {
+                    const newBook = new Book(data[idx]);
+                    bookList.push(newBook);
+                }
+                mvcBookStorage.bookList(bookList);
+            },
+            "error"     : errorProcessor
+        });
+    }
+
+    window.addEventListener("load", function(event) {
+        mvcBookStorage = new BookStorageController();
+        loadBooks();
+        ko.applyBindings(mvcBookStorage, document.getElementById("bookController"));
+    });
+    </script>
 </body>
 </html>

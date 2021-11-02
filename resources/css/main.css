@@ -1,0 +1,7 @@
+.control {
+    cursor: pointer;
+}
+
+.table td.controls {
+    text-align: center;
+}
