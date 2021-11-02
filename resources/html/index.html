@@ -21,8 +21,27 @@
             <h1>Book storage</h1>
         </div>
         &nbsp;
-        <div class="d-flex justify-content-end">
-            <button class="btn btn-primary" onclick="openCreateBookWindow();">Add book</button>
+        <div class="d-flex">
+            <div class="p-2">
+                <div class="input-group filter">
+                    <button class="btn btn-primary filter-apply">Filter</button>
+                    <input type="text" class="form-control filter-input" id="author-filter"
+                           placeholder="Author" />
+                    <button class="btn btn-primary disabled clear-filter">&#9003;</button>
+                    <input type="text" class="form-control filter-input" id="title-filter"
+                           placeholder="Title" />
+                    <button class="btn btn-primary disabled clear-filter">&#9003;</button>
+                    <input type="text" class="form-control filter-input" id="published-date-from-filter"
+                           placeholder="Published Date From" />
+                    <button class="btn btn-primary disabled clear-filter">&#9003;</button>
+                    <input type="text" class="form-control filter-input" id="published-date-to-filter"
+                           placeholder="Published Date To" />
+                    <button class="btn btn-primary disabled clear-filter">&#9003;</button>
+                </div>
+            </div>
+            <div class="p-2 ms-auto">
+                <button class="btn btn-primary" onclick="openCreateBookWindow();">Add book</button>
+            </div>
         </div>
         &nbsp;
         <table class="table table-bordered">
@@ -31,7 +50,7 @@
                     <th>#</th>
                     <th>Author</th>
                     <th>Title</th>
-                    <th>Publish Date</th>
+                    <th>Published Date</th>
                     <th></th>
                 </tr>
             </thead>
@@ -107,16 +126,16 @@
                         <div class="col">
                             <div class="mb-3">
                                 <label for="author" class="form-label">Author</label>
-                                <input type="text" class="form-control" id="author" data-bind="value: author">
+                                <input type="text" class="form-control" id="author" data-bind="value: author" />
                             </div>
                             <div class="mb-3">
                                 <label for="title" class="form-label">Title</label>
-                                <input type="text" class="form-control" id="title" data-bind="value: title">
+                                <input type="text" class="form-control" id="title" data-bind="value: title" />
                             </div>
                             <div class="input-group mb-2">
                                 <span class="input-group-text" id="publishedDate">Publish Date</span>
                                 <input type="text" class="form-control" aria-describedby="publishedDate"
-                                       data-bind="value: published_date">
+                                       data-bind="value: published_date" />
                             </div>
                         </div>
                     </div>
@@ -235,9 +254,32 @@
         self.popupActionFn      = null;
     }
 
+    function getFilterString() {
+        const parseParam = (paramName, fieldQuery) => {
+            const fieldValue = $(fieldQuery).val();
+            if (!!fieldValue && fieldValue !== "") {
+                return `${paramName}=${fieldValue}`;
+            } else {
+                return null;
+            }
+        };
+
+        const paramList = [];
+        paramList.push(parseParam("author",                 "#author-filter"                ));
+        paramList.push(parseParam("title",                  "#title-filter"                 ));
+        paramList.push(parseParam("published_date_from",    "#published-date-from-filter"   ));
+        paramList.push(parseParam("published_date_to",      "#published-date-to-filter"     ));
+        return paramList.filter((el) => !!el).join("&");
+    }
+
     function loadBooks() {
+        let path = "/book/list";
+        const params = getFilterString();
+        if (params !== "") {
+            path += "?" + params;
+        }
         $.ajax({
-            "url"       : "/book/list",
+            "url"       : path,
             "type"      : "GET",
             "success"   : (data) => {
                 const bookList = [];
@@ -251,10 +293,39 @@
         });
     }
 
+    function filterInit() {
+        const filterButton = $(".filter .filter-apply");
+        filterButton.on("click", loadBooks);
+
+        $(".filter .filter-input").each((_index, filterNode) => {
+            filterNode = $(filterNode);
+
+            filterNode.on("input", (_e) => {
+                if (filterNode.val() !== "") {
+                    filterNode.next().removeClass("disabled");
+                } else {
+                    filterNode.next().addClass("disabled");
+                }
+            });
+        });
+
+        $(".filter .clear-filter").each((_index, clearNode) => {
+            clearNode = $(clearNode);
+
+            clearNode.on("click", (_e) => {
+                clearNode.prev().val("");
+                clearNode.addClass("disabled");
+                loadBooks();
+            });
+        });
+    }
+
     window.addEventListener("load", function(event) {
         mvcBookStorage = new BookStorageController();
         loadBooks();
         ko.applyBindings(mvcBookStorage, document.getElementById("bookController"));
+
+        filterInit();
     });
     </script>
 </body>
