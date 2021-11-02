@@ -34,7 +34,12 @@ async def book_list(
         title: str = None,
         published_date_from: str = None,
         published_date_to: str = None) -> List[Book]:
-    return book_storage.list(author, title, published_date_from, published_date_to)
+    return book_storage.list(
+        author,
+        title,
+        BookUpdate.parse_date_str(published_date_from),
+        BookUpdate.parse_date_str(published_date_to)
+    )
 
 
 @app.post("/book", description="Create an new book record.")

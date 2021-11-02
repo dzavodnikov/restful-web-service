@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List, Any, Optional
 
 from pydantic import ValidationError
@@ -66,8 +67,8 @@ class SQLiteBookStorage:
     def list(self,
              author: Optional[str] = None,
              title: Optional[str] = None,
-             published_date_from: Optional[str] = None,
-             published_date_to: Optional[str] = None) -> List[Book]:
+             published_date_from: Optional[date] = None,
+             published_date_to: Optional[date] = None) -> List[Book]:
         """Provide list of saved books."""
 
         filter_conditions = [SQLiteBookStorage.string_compare_expr("author", author),
