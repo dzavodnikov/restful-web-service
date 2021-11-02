@@ -78,9 +78,10 @@ class MemoryBookStorage:
         self.books.append(book)
         return book
 
-    def remove(self, book: Book) -> None:
+    def remove(self, book_id: int) -> None:
         """Remove book from the storage."""
 
+        book = self.find(book_id)
         self.books.remove(book)
 
     def persist(self, _book: Book) -> None:
